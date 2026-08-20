@@ -1,11 +1,8 @@
 #lang racket
 (require racket/control)
 
-
-(define (~> . args) (apply compose (reverse (map (λ (el) (if (procedure? el) el (const el))) args))))
-
   
-(define (Option.bindr prev func)
+(define (Option.bind prev func)
   (match prev
     ((cons 'Error e) prev)
     ((cons 'Some x) (func x))))
@@ -25,7 +22,5 @@
     ((cons 'Error e) (format "Error: ~a" e))
     ((cons 'Some x) x)))
 
-;(define run-option (curry run Option.return Option.bindr Option.format))
 
-
-(provide Option.bindr Option.return Some Error quo Option.format)
+(provide Option.bind Option.return Some Error quo Option.format)

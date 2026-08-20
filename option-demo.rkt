@@ -3,7 +3,7 @@
 (require "monad-run.rkt")
 (require "option.rkt")
 
-(define run-option (make-run Option.return Option.bindr))
+(define run-option (make-run Option.return Option.bind))
 
 (define results1
   (run-option
