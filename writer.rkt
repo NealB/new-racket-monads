@@ -1,5 +1,6 @@
 #lang racket
 (require racket/control)
+(require "monad-run.rkt")
 
 (define (ensure-list v) (if (list? v) v (list v)))
 
@@ -16,8 +17,9 @@
          
 (define (Writer.return v) (cons v (list)))
 
-
 (define (Writer.format w)
   (apply string-append (map (curry format "~a~n") (reverse (cdr w)))))
 
-(provide Writer.bind Writer.return Writer.format)
+(define Writer.do (make-run Writer.return Writer.bind Writer.format))
+
+(provide Writer.bind Writer.return Writer.format Writer.do)

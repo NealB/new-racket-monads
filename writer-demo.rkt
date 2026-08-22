@@ -3,8 +3,6 @@
 (require "monad-run.rkt")
 (require "writer.rkt")
 
-(define run-writer (make-run Writer.return Writer.bind Writer.format))
-
 
 (define (add5 x)
   (cons (+ 5 x) (format "Add 5 to ~a" x)))
@@ -13,7 +11,7 @@
   (cons #f (apply format msg args)))
 
 (define results1
-  (run-writer
+  (Writer.do
    (λ (!)
      (let* ((a (! Writer.return 34))
             (b (! add5 a))
