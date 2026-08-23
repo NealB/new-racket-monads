@@ -14,38 +14,35 @@
 (define (write-log msg . args)
   (cons #f (apply format msg args)))
 
-(define (effect arg)
+(define (effect! arg)
   (shift k (Writer.bind arg k)))
 
 (define-syntax let!
   (syntax-rules (_)
-
-    ((_ _ expr)
-     (effect expr))
-    
     ((_ v expr)
-     (begin (define v (effect expr)) v))))
+     (begin (define v (effect! expr)) v))))
+
+(define (run fn) (reset (fn)))
 
 ;(define-syntax-rule (! expr) (let! _ expr))
 
-(define results1
-   (reset
-
-     (let! a (Writer.return 34))
-     (let! b (add5 a))
-     (let! c (add5 b))
-     (let! d (add5 19))
-     (let! e (add5 2))
+(define results
+   (run
+    (thunk
+     (define a (effect! (Writer.return 34)))
+     (define b (effect! (add5 a)))
+     (define c (effect! (add5 b)))
+     (define d (effect! (add5 19)))
+     (define e (effect! (add5 2)))
 
 
      (for ((i 3))
-       (effect (write-log "final log message ~a" i)))
+       (effect! (write-log "final log message ~a" i)))
 
-     (Writer.return e)))
-
-(define results2 results1) ;(reset (results1)))
+     (Writer.return e))))
 
 
 
-(display (~a "results:\n" (Writer.format results2) (~a "done\n")))
+
+(display (~a "results:\n" (Writer.format results) (~a "done\n")))
 (newline)
