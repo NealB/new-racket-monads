@@ -14,21 +14,20 @@
 (define (write-log msg . args)
   (cons #f (apply format msg args)))
 
-(define (effect! arg)
-  (shift k (Writer.bind arg k)))
+;(define (effect! arg)
+;  (shift k (Writer.bind arg k)))
 
-(define-syntax let!
-  (syntax-rules (_)
-    ((_ v expr)
-     (begin (define v (effect! expr)) v))))
 
 (define (run fn) (reset (fn)))
 
-;(define-syntax-rule (! expr) (let! _ expr))
 
 (define results
    (run
     (thunk
+     (define (effect! arg)
+       (shift k (Writer.bind arg k)))
+
+     
      (define a (effect! (Writer.return 34)))
      (define b (effect! (add5 a)))
      (define c (effect! (add5 b)))
