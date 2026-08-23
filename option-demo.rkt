@@ -3,33 +3,43 @@
 (require "monad-run.rkt")
 (require "option.rkt")
 
-(define run-option (make-run Option.return Option.bind))
+
+(define (quo x y)
+  (if (= y 0)
+      (Error "divide by zero")
+      (Some (quotient x y))))
+
+
 
 (define results1
-  (run-option
-   (λ (?)
-     (let* ((a (? Some 34))
-            (b (? Some 5))
-            (c (? quo a b))
-            (d (? Some 6))
-            (e (? quo a d)))
-
-       (format "~a / ~a = ~a; ~a / ~a = ~a" a b c a d e)))))
+  (run
+   (thunk
+    (define effect! (make-effect! Option-bind))
+    (define Some! (compose1 effect! Some))
+    
+    (let** ((a (Some! 34))
+            (b (Some! 5))
+            (c (effect! (quo a b)))
+            (d (Some! 6))
+            (e (effect! (quo a d)))
+            (_  (Option-return (format "~a / ~a = ~a; ~a / ~a = ~a" a b c a d e))))))))
 
 (display results1)
 (newline)
 
 
 (define results2
-  (run-option
-   (λ (?)
-     (let* ((a (? Some 34))
-            (b (? Some 5))
-            (c (? quo a b))
-            (d (? Some 0))
-            (e (? quo a d)))
+  (run
+   (thunk
+    (define effect! (make-effect! Option-bind))
+    (define Some! (compose1 effect! Some))
 
-       (format "~a / ~a = ~a; ~a / ~a = ~a" a b c a d e)))))
-
+    (let** ((a (Some! 34))
+            (b (Some! 5))
+            (c (effect! (quo a b)))
+            (d (Some! 0))
+            (e (effect! (quo a d)))
+            (_ (Option-return (format "~a / ~a = ~a; ~a / ~a = ~a" a b c a d e))))))))
+   
 (display results2)
 (newline)
