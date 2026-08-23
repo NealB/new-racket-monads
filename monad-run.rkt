@@ -1,15 +1,26 @@
 #lang racket
 (require racket/control)
+(require syntax/parse/define (for-syntax racket/syntax))
 
+(define-syntax (define-compex stx)
+  (syntax-parse stx
+    [(_define-compex name0 bind0 return0)
+     (with-syntax ()
+       #'(define-syntax (name0 s)
+           (syntax-parse s
+             [(name0 body0 body (... ...))
+              (with-syntax ([bind!   (format-id s "~a!" #'bind)]
+                            [return! (format-id s "return!")])
+                #'(let ()
+                    (define (bind! arg) (shift k (bind0 arg k)))
+                    (define return! return0)
+                    (define-syntax-rule (define! v expr)
+                      (define v (bind! expr)))
+                    (reset body0 body (... ...))))])))]))
 
+(define (make-effect! bind)
+  (λ (arg) (shift k (bind arg k))))
 
+(define (run fn) (reset (fn)))
 
-(define (make-run m:return m:bind (m:run identity))
-  (define (effect operation . arguments)
-    (shift k (m:bind (apply operation arguments) k)))
-
-  (λ (procedure)
-    (reset (procedure))))
-
-
-(provide make-run)
+(provide run define-compex make-effect!)

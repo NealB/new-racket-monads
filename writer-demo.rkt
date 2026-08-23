@@ -3,45 +3,25 @@
 (require "monad-run.rkt")
 (require "writer.rkt")
 
-(define-syntax-rule (letfine ((name value) (name2 value2) ...))
-  (begin
-       (define name value)
-       (define name2 value2) ...))
-
 (define (add5 x)
   (cons (+ 5 x) (format "Add 5 to ~a" x)))
-
-(define (write-log msg . args)
-  (cons #f (apply format msg args)))
-
-;(define (effect! arg)
-;  (shift k (Writer.bind arg k)))
-
-
-(define (run fn) (reset (fn)))
 
 
 (define results
    (run
     (thunk
-     (define (effect! arg)
-       (shift k (Writer.bind arg k)))
-
+     (define effect! (make-effect! Writer-bind))
      
-     (define a (effect! (Writer.return 34)))
+     (define a 34)
      (define b (effect! (add5 a)))
      (define c (effect! (add5 b)))
      (define d (effect! (add5 19)))
      (define e (effect! (add5 2)))
 
+     (effect! (Writer-log "final log message"))
 
-     (for ((i 3))
-       (effect! (write-log "final log message ~a" i)))
-
-     (Writer.return e))))
+     (Writer-return e))))
 
 
-
-
-(display (~a "results:\n" (Writer.format results) (~a "done\n")))
+(display (~a "results:\n" (Writer-format results) (~a "done\n")))
 (newline)

@@ -7,7 +7,7 @@
 (define (append-log next-log prev-log)
   (append (ensure-list next-log) (ensure-list prev-log)))
   
-(define (Writer.bind prev func)
+(define (Writer-bind prev func)
   (let* ((pval (car prev))
          (plog (cdr prev))
          (next (func pval))
@@ -15,11 +15,13 @@
          (nlog (cdr next)))
     (cons nval (append-log nlog plog))))
          
-(define (Writer.return v) (cons v '()))
+(define (Writer-return v) (cons v '()))
 
-(define (Writer.format w)
-  (apply string-append (map (curry format "~a~n") (reverse (cdr w)))))
+(define (Writer-log msg . args)
+  (cons #f (apply format msg args)))
 
-(define Writer.do (make-run Writer.return Writer.bind Writer.format))
+(define (Writer-format w)
+  (apply ~a (map (curry format "~a~n") (reverse (cdr w)))))
 
-(provide Writer.bind Writer.return Writer.format Writer.do)
+
+(provide Writer-bind Writer-return Writer-log Writer-format)
