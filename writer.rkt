@@ -15,7 +15,7 @@
          (nlog (cdr next)))
     (cons nval (append-log nlog plog))))
          
-(define (Writer.return v) (cons v (list)))
+(define (Writer.return v) (cons v '()))
 
 (define (Writer.format w)
   (apply string-append (map (curry format "~a~n") (reverse (cdr w)))))
