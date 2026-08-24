@@ -2,6 +2,7 @@
 (require racket/control)
 (require syntax/parse/define (for-syntax racket/syntax))
 
+; special thanks to @soegaard
 (define-syntax (define-compex stx)
   (syntax-parse stx
     [(_define-compex name0 bind0 return0)
@@ -18,9 +19,12 @@
                       (define v (bind! expr)))
                     (reset body0 body (... ...))))])))]))
 
+;(define (oops) (printf "oops...~n"))
+
 (define (make-effect! bind)
   (λ (arg) (shift k (bind arg k))))
 
-(define (run fn) (reset (fn)))
+(define (run fn)
+  (reset (fn)))
 
 (provide run define-compex make-effect!)

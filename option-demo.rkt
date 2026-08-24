@@ -17,12 +17,14 @@
   (run
    (thunk
     
-    (let** ((a (Some! 34))
-            (b (Some! 5))
-            (c (bind! (quo a b)))
-            (d (Some! 6))
-            (e (bind! (quo a d)))
-            (_  (Option-return (format "~a / ~a = ~a; ~a / ~a = ~a" a b c a d e))))))))
+    (letfine
+     ((a (Some! 34))
+      (b (Some! 5))
+      (c (bind! (quo a b)))
+      (d (Some! 6))
+      (e (bind! (quo a d)))))
+    
+    (Option-return (format "~a / ~a = ~a; ~a / ~a = ~a" a b c a d e)))))
 
 (display results1)
 (newline)
@@ -32,12 +34,14 @@
   (run
    (thunk
 
-    (let** ((a (Some! 34))
-            (b (Some! 5))
-            (c (bind! (quo a b)))
-            (d (Some! 0))
-            (e (bind! (quo a d)))
-            (_ (Option-return (format "~a / ~a = ~a; ~a / ~a = ~a" a b c a d e))))))))
+    (letfine
+     ((a (bind! (Some 34)))
+      (b (bind! (Some 5)))
+      (c (bind! (quo a b)))
+      (d (bind! (Some 0)))
+      (e (bind! (quo a d)))))
+    
+    (Option-return (format "~a / ~a = ~a; ~a / ~a = ~a" a b c a d e)))))
    
 (display results2)
 (newline)

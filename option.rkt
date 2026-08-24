@@ -3,6 +3,11 @@
 
 (define-syntax-rule (let** ((name value) ... (_ value1)))
   (let* ((name value) ...) value1))
+
+(define-syntax-rule (letfine ((name value) (name2 value2) ...))
+  (begin
+       (define name value)
+       (define name2 value2) ...))
   
 (define (Option-bind prev func)
   (match prev
@@ -20,4 +25,4 @@
     ((cons 'Some x) x)))
 
 
-(provide let** Option-bind Option-return Some Error Option-format)
+(provide let** letfine Option-bind Option-return Some Error Option-format)
