@@ -22,8 +22,9 @@
   (cond
     ((not input) input)
     ((eq? input 'done) input)
-    ((and (list? input) (eq? (car input) 'error)) input)
-    (else (func input))))
+    ((and (list? input) (not (null? input)) (eq? (car input) 'error)) input)
+    (else (func input)))
+  (displayln "falls though"))
 
 (define (Pipe-return input)
   (procedurize input))
