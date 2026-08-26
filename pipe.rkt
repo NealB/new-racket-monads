@@ -1,5 +1,6 @@
 #lang racket
 (require racket/control)
+(require "monad-run.rkt")
 
 (define-syntax-rule (let** ((name value) ... (_ value1)))
   (let* ((name value) ...) value1))
@@ -18,16 +19,40 @@
     (_ (const el))))
 
 
-(define (Pipe-bind input func)
-  (cond
-    ((not input) input)
-    ((eq? input 'done) input)
-    ((and (list? input) (not (null? input)) (eq? (car input) 'error)) input)
-    (else (func input)))
-  (displayln "falls though"))
+(define compose* (curry apply compose))
+(define flatten* (compose flatten list*))
+
+(define bind! #f)
+
+(define (tagged-list? tag input (fn identity))
+  (match input
+    ((list match-tag rest ...) #:when (eq? tag match-tag) (fn input))
+    (_ #f)))
+  
+(define (~~> . args)
+  (let/cc fail!
+    (run
+     (let ()
+       
+       (define (Pipe-bind input func)
+         (cond
+           ((not input) (fail! #f))
+           ((eq? input 'done) input)
+           ((tagged-list? 'error input) (fail! input))
+           ((tagged-list? 'tee input) (begin ((second input) input) (func identity)))
+           
+           ((procedure? input) (func input))
+           (else (func (const input)))))
+       
+       (set! bind! (make-effect! Pipe-bind))
+       
+       (letfine ((bnd (map (curry (make-effect! Pipe-bind)) args))
+                 (rev (reverse bnd))))
+
+       (compose* (flatten* rev))))))
+
 
 (define (Pipe-return input)
   (procedurize input))
 
-
-(provide Pipe-bind Pipe-return )
+(provide bind! Pipe-return ~~>)
