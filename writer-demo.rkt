@@ -9,19 +9,21 @@
 
 (define bind! (make-effect! Writer-bind))
 
+(define-syntax-rule (run-reset body0 body1 ...)
+  (reset (thunk body0 body1 ...)))
+
 (define results
-   (run
-    (thunk
+  (run-reset
      
-     (define a 34)
-     (define b (bind! (add5 a)))
-     (define c (bind! (add5 b)))
-     (define d (bind! (add5 19)))
-     (define e (bind! (add5 2)))
+   (define a 34)
+   (define b (bind! (add5 a)))
+   (define c (bind! (add5 b)))
+   (define d (bind! (add5 19)))
+   (define e (bind! (add5 2)))
 
-     (bind! (Writer-log "final log message"))
+   (bind! (Writer-log "final log message"))
 
-     (Writer-return e))))
+   (Writer-return e)))
 
 
 (display (~a "results:\n" (Writer-format results) (~a "done\n")))

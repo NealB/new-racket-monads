@@ -11,17 +11,17 @@
 
 
 (define bind! (make-effect! Option-bind))
-(define Some! (compose1 bind! Some))
+;(define Some! (compose1 bind! Some))
 
 (define results1
   (run
    (thunk
     
     (letfine
-     ((a (Some! 34))
-      (b (Some! 5))
+     ((a (bind! (Some 34)))
+      (b (bind! (Some 5)))
       (c (bind! (quo a b)))
-      (d (Some! 6))
+      (d (bind! (Some 6)))
       (e (bind! (quo a d)))))
     
     (Option-return (format "~a / ~a = ~a; ~a / ~a = ~a" a b c a d e)))))

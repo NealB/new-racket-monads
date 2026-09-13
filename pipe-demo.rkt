@@ -12,16 +12,18 @@
 (when-falsy $# (argv args-dft))
 
 (define (tee fn)
-  `(call ,fn))
+  (λ (state)
+    (fn state)
+    '()))
 
 (define results
   (~~> (current-command-line-arguments)
        #{vector-append % #(#f)}
        in-vector
-       `(tee ,(λ (state)
-                (display "State:\n")
-                (pretty-print state)
-                (newline)))
+       (tee (λ (state)
+              (display "State:\n")
+              (pretty-print state)
+              (newline)))
        sequence->generator))
 
 

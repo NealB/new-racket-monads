@@ -6,17 +6,24 @@
 (define (StateValue state value)
   `((state . ,state) (value . ,value)))
 
-(define get-state (~> (curry assoc 'state) cdr))
-(define get-value (~> (curry assoc 'value) cdr))
+(define (get-assoc-element key) (curry assoc key))
+(define get-assoc-state (get-assoc-element 'state))
+(define get-assoc-value (get-assoc-element 'value))
+
+(define get-state (~> get-assoc-state cdr))
+(define get-value (~> get-assoc-value cdr))
 
 (define (State-return value)
   (λ (s) (StateValue s value)))
 
 (define (State-bind ma func)
-     (λ (state)
-       (let* ((sv (ma state))
-              (mb ((~> (get-value sv) func)))
-              (sv* ((~> (get-state sv) mb)))) sv*)))
+  (define (run state)
+
+    (let* ((sv (ma state))
+           (mb ((~> (get-value sv) func)))
+           (sv* ((~> (get-state sv) mb))))
+      sv*))
+  run)
 
 
 (define (State-put v)

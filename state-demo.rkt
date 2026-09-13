@@ -4,21 +4,25 @@
 (require "state.rkt")
 (require "../racket-utilities/utilities-dev.rkt")
 
-(define bind! (make-effect! State-bind))
+;(define bind! (make-effect! State-bind))
 
+(define (run-with-reset thunk_) (reset (thunk_)))
+
+(define-syntax-rule (run-reset body0 body1 ...)
+  (reset
+   ((thunk body0 body1 ...))))
+     
 (define result
-   (run
-    (thunk
+  (run-reset
+   
+   (define bind! (make-effect! State-bind))
+   (define a (bind! (State-put 34)))
+   (define b (bind! (State-put (+ a 12))))
+   (define d (bind! (State-modify (curry + 11))))
      
-     (define a (bind! (State-put 34)))
+   (State-return (format "a=~a b=~a d=~a" a b d))))
 
-     (define b (bind! (State-put (+ a 12))))
-
-     (define d (bind! (State-modify (curry + 11))))
-     
-     (State-return (format "a=~a b=~a d=~a" a b d)))))
-
-(letfine ((sv (State-run result 0))
+(letfine (((State-run result 0) => sv)
           ((get-state sv) => final-state)
           ((get-value sv) => final-value)))
 
