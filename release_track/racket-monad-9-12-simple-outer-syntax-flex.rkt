@@ -9,6 +9,7 @@
 
   (syntax-rules ()
     [(_ #:bind bindr #:return return body ...)
+     
      (let ((bind-name bindr) (return-name return))
        (define-syntax monad/helper
          (syntax-rules ()
@@ -43,6 +44,9 @@
            [(_ expr0 expr1 (... ...))
             (monad/helper #:begin (expr0) expr1 (... ...))]
 
+           [(_ expr0 expr1 (... ...))
+            (monad/helper #:begin (expr0) expr1 (... ...))]
+
 
            ))
 
@@ -53,3 +57,6 @@
     ))
 
 (provide monad-chain macro-curry)
+
+(module+ main
+  (displayln "hello from utilities.div"))
