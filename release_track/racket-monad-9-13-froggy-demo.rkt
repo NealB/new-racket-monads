@@ -17,7 +17,6 @@
 
 
 (define Storyteller-Return ~a)
-  
 (define Storyteller-Bind (λ (prev next)
                            (define n (next ""))
                            (if (string=? prev "")
@@ -33,17 +32,19 @@
                            (nextAction s*))))
 
 
+(define Nondeterministic-Return (thunk (λ (s) (list s))))
+(define Nondeterministic-Bind (λ (prev next)
+
+                                (define (bind-state s)
+                                  (define possibleStates (prev s))
+                                  (append-map (λ (s*)
+                                                (define nextAction (next (void)))
+                                                (nextAction s*))
+                                              possibleStates))
+                                bind-state))
+
+
 (struct FrogState (Height Hunger) #:transparent)
-
-(define simulator (make-interp
-                   'jump (thunk (λ (s) (FrogState (+ 1 (FrogState-Height s)) (+ 1 (FrogState-Hunger s)))))
-                   'croak (thunk (λ (s) (FrogState (FrogState-Height s) (+ 1 (FrogState-Hunger s)))))
-                   'eat_fly (thunk (λ (s) (FrogState (FrogState-Height s) 0)))
-
-                   'bind (thunk Simulator-Bind)
-                   'return (thunk Simulator-Return)
-                   'initial (thunk (const (FrogState 0 0)))
-                   'zero (thunk identity)))
 
 
 (define storyteller (make-interp
@@ -56,41 +57,81 @@
                      'initial (const "")
                      'zero (thunk "")))
 
+(define simulator (make-interp
+                   'jump (thunk (λ (s) (FrogState (+ 1 (FrogState-Height s)) (+ 1 (FrogState-Hunger s)))))
+                   'croak (thunk (λ (s) (FrogState (FrogState-Height s) (+ 1 (FrogState-Hunger s)))))
+                   'eat_fly (thunk (λ (s) (FrogState (FrogState-Height s) 0)))
+
+                   'bind (thunk Simulator-Bind)
+                   'return (thunk Simulator-Return)
+                   'initial (thunk (const (FrogState 0 0)))
+                   'zero (thunk identity)))
+
+(define multiverse-simulator (make-interp
+                              'jump (thunk (define (jump s)
+                                             (list (FrogState (+ 1 (FrogState-Height s)) (FrogState-Hunger s))))
+                                           jump)
+                              'croak (thunk (define (croak s) (list s)) croak)
+                              'eat_fly (thunk (define (eat_fly s) (list (FrogState (FrogState-Height s) 0))) eat_fly)
+
+                              'bind (thunk Nondeterministic-Bind)
+                              'return (thunk Nondeterministic-Return)
+                              'initial (thunk (const (FrogState 0 0)))
+                              'zero (thunk (const '()))))
+
+
 
 (define (adventure interp)
 
   (monad-chain
    #:bind (interp 'bind)
    #:return (interp 'return)
+   #:resolve-inst interp
 
-   #:do! (interp 'jump)
-   #:do! (interp 'croak)
-   #:do! (interp 'jump)
-   #:do! (interp 'eat_fly)
-
+   #:run jump
+   #:run croak
+   #:run jump
+   #:run eat_fly
+   
    #:let! result (interp 'zero)
-   result))
+
+   #:return result
+   ))
 
 
 (define (format-final result)
-  (printf "Result: '~s'~n" result)
+  ;(printf "format-final Result: '~s'~n" result)
   (match result
     ((? string? str) str)
     ((? procedure? p) (p (FrogState 0 0)))
-    (_ "unknown result type")))
+    ((? struct? s) s)
+    ((? list? l) l)
+    (_ (~a "unknown result type" (~s result)))))
 
 (define (print-result result)
-  (~a* "Final result: " result))
+  (~a* "Final result:\n" result))
 
 (define (inline-print msg)
   (λ ((arg #t))
     (displayln msg)
     arg))
 
-(~>! #f (adventure storyteller) format-final (~> print-result))
-(~>! (FrogState 0 0) (adventure simulator) format-final (~> print-result))
+(~>! (storyteller 'initial) (adventure storyteller) format-final print-result)
+(~>! (simulator 'initial) (adventure simulator) format-final print-result)
+
+(newline)
+
+(~>! (multiverse-simulator 'initial)
+     (adventure multiverse-simulator)
+     format-final
+     print-result)
 
 
+;(curry-macro storyteller-interp (monad-chain
+;                                 #:bind Storyteller-Bind
+;                                 #:return Simulator-Return
+;                                 #:resolve-inst storyteller                                 
+             
 
 ;(printf "Raw: ~a, Final Height: ~a, Hunger: ~a~n" final-state (FrogState-Height final-state) (FrogState-Hunger final-state))
 

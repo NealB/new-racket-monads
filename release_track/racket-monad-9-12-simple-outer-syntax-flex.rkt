@@ -7,10 +7,15 @@
 
 (define-syntax monad-chain
 
+  #;(define-syntax val
+    (lambda (stx)
+      (syntax-case stx ()
+        [val (identifier? (syntax val)) (syntax (get-val))])))
+  
   (syntax-rules ()
-    [(_ #:bind bindr #:return return body ...)
+    [(_ #:bind bindr #:return return #:resolve-inst resolve-inst body ...)
      
-     (let ((bind-name bindr) (return-name return))
+     (let ((bind-name bindr) (return-name return) (resolve-inst-name resolve-inst))
        (define-syntax monad/helper
          (syntax-rules ()
     
@@ -28,6 +33,9 @@
 
            [(_ #:display (expr (... ...)) rest (... ...))
             (monad/helper #:begin ((displayln (~a expr (... ...)))) rest (... ...))]
+
+           [(_ #:run instruction rest (... ...))
+            (monad/helper #:do! (resolve-inst-name 'instruction) rest (... ...))]
 
            [(_ #:bind-alias bind-alias rest (... ...))
             (monad/helper #:begin ((define bind-alias bindr)) rest (... ...))]
