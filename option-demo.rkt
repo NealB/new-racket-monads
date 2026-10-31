@@ -1,5 +1,6 @@
 #lang racket
 (require racket/control)
+(require "writer.rkt")
 
 
 (struct Option-type (disposition value messages) #:transparent)
@@ -39,7 +40,9 @@
    
    (define a (Option-bind! initial))
    (define c (Option-bind! (quotient-option a 2)))
-   (define e (Option-bind! (quotient-option a 3)))
+   
+   (define e (shift k (Option-bind (quotient-option a 3) k)))
+   
    (format "a=~a c=~a e=~a" a c e)))
 
 (display (~a "Reults = " results1))
