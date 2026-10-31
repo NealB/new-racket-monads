@@ -5,6 +5,8 @@
     (old-name curry-args ... args (... ...))))
 
 
+
+
 (define-syntax monad-chain
 
   #;(define-syntax val
@@ -30,9 +32,6 @@
 
            [(_ #:begin (expr (... ...)) rest (... ...))
             (begin expr (... ...) (monad/helper rest (... ...)))]
-
-           [(_ #:display (expr (... ...)) rest (... ...))
-            (monad/helper #:begin ((displayln (~a expr (... ...)))) rest (... ...))]
 
            [(_ #:run instruction rest (... ...))
             (monad/helper #:do! (resolve-inst-name 'instruction) rest (... ...))]

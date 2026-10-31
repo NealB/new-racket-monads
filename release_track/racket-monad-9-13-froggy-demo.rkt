@@ -1,4 +1,4 @@
-#lang curly-fn racket
+#lang racket
 (require "racket-monad-9-12-simple-outer-syntax-flex.rkt")
 
 (define (~> . args)
@@ -8,6 +8,8 @@
 (define (~s* . args) (~>! args (curry apply ~s) displayln))
 (define (~a* . args) (~>! args (curry apply ~a) displayln))
 (define (join* . args) (~>! args (curry map ~a) string-join displayln))
+
+
 
 (define (make-interp . keys-functions)
   (define interp-hash (apply hash keys-functions))
@@ -34,7 +36,6 @@
 
 (define Nondeterministic-Return (thunk (λ (s) (list s))))
 (define Nondeterministic-Bind (λ (prev next)
-
                                 (define (bind-state s)
                                   (define possibleStates (prev s))
                                   (append-map (λ (s*)
@@ -68,10 +69,13 @@
                    'zero (thunk identity)))
 
 (define multiverse-simulator (make-interp
+                              
                               'jump (thunk (define (jump s)
                                              (list (FrogState (+ 1 (FrogState-Height s)) (FrogState-Hunger s))))
                                            jump)
+                              
                               'croak (thunk (define (croak s) (list s)) croak)
+                              
                               'eat_fly (thunk (define (eat_fly s) (list (FrogState (FrogState-Height s) 0))) eat_fly)
 
                               'bind (thunk Nondeterministic-Bind)

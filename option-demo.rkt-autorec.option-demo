@@ -1,0 +1,59 @@
+#lang racket
+(require racket/control)
+
+(define (Some x) (cons 'Some x))
+(define (Error e) (cons 'Error e))
+
+(define (Option-bind prev func)
+  (match prev
+    ((cons 'Error (? string?)) prev)
+    ((cons 'Some (? number? x)) (func x))
+    (_ (Error (format "Option-bind-- bad argument: ~s" prev)))))
+
+(define (Option-return v) (cons 'Some v))
+
+(struct Option-type (disposition value) #:transparent)
+
+(define (quotient-option x y)
+  (if (= y 0)
+      (Error "divide by zero")
+      (Some (quotient x y))))
+
+
+(define (delim-k-bind bind-func arg)
+  (shift k (bind-func arg k)))
+
+(define (Option-bind! arg) (delim-k-bind Option-bind arg))
+(define-syntax-rule (Option expr ...) (reset (Option-return (let () expr ...))))
+(define-syntax-rule (Option-define name expr ...) (define name (Option expr ...)))
+
+(define check-option Option-bind!)
+
+(define results1
+  (Option
+   (define init (Some 3400))
+   
+   (define a (shift k (Option-bind init k)))
+   (define b 5)
+   (define c (delim-k-bind Option-bind (quotient-option a 2)))
+
+   (define d 6)
+   (define e (check-option (quotient-option a 3)))
+   (format "~a / ~a = ~a; ~a / ~a = ~a" a b c a d e)))
+
+(display results1)
+(newline)
+
+
+(define results2
+  (Option
+   (define a (Option-bind! (Some 34)))
+   (define b (Option-bind! (Some 4))) ;(Error "That does not compute!")))
+   (define c (Option-bind! (quotient-option a b)))
+   (define d (Option-bind! (Some 5)))
+   (define e (Option-bind! (quotient-option a d)))
+    
+   (format "~a / ~a = ~a; ~a / ~a = ~a" a b c a d e)))
+   
+(display results2)
+(newline)

@@ -8,7 +8,17 @@
   (begin
        (define name value)
        (define name2 value2) ...))
-  
+
+
+
+(define (make-effect! bind)
+  (λ (arg) (shift k (bind arg k))))
+
+(define (run fn)
+  (reset (fn)))
+
+
+
 (define (Option-bind prev func)
   (match prev
     ((cons 'Error e) prev)

@@ -2,8 +2,8 @@
 (require racket/control)
 (require syntax/parse/define (for-syntax racket/syntax))
 
-; special thanks to @soegaard
-(define-syntax (define-compex stx)
+; thanks @soegaard
+#;(define-syntax (define-compex stx)
   (syntax-parse stx
     [(_define-compex name0 bind0 return0)
      (with-syntax ()
@@ -27,4 +27,4 @@
 (define (run fn)
   (reset (fn)))
 
-(provide run define-compex make-effect!)
+(provide run make-effect!)
