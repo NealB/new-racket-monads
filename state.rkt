@@ -17,13 +17,11 @@
   (λ (s) (StateValue s value)))
 
 (define (State-bind ma func)
-  (define (run state)
-
+  (λ (state)
     (let* ((sv (ma state))
            (mb ((~> (get-value sv) func)))
            (sv* ((~> (get-state sv) mb))))
-      sv*))
-  run)
+      sv*)))
 
 
 (define (State-put v)

@@ -48,17 +48,3 @@
 (display (~a "Reults = " results1))
 (newline)
 
-
-#| (define results2
-     (Option
-      (define a (Option-bind! (Some 34)))
-      (define b (Option-bind! (Some 4))) ;(Error "That does not compute!")))
-      (define c (Option-bind! (quotient-option a b)))
-      (define d (Option-bind! (Some 5)))
-      (define e (Option-bind! (quotient-option a d)))
-       
-      (format "~a / ~a = ~a; ~a / ~a = ~a" a b c a d e)))
-      
-   (display results2)
-   (newline)
- |#

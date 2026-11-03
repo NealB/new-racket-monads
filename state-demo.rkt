@@ -22,9 +22,9 @@
      
    (State-return (format "a=~a b=~a d=~a" a b d))))
 
-(letfine (((State-run result 0) => sv)
-          ((get-state sv) => final-state)
-          ((get-value sv) => final-value)))
+(letfine ((sv (State-run result 0))
+          (final-state (get-state sv))
+          (final-value (get-value sv))))
 
 (displayln (~a "final state = " (~s final-state)))
 (displayln (~a "final value = " (~s final-value)))

@@ -14,7 +14,8 @@
          (nval (car next))
          (nlog (cdr next)))
     (cons nval (append-log nlog plog))))
-         
+
+
 (define (Writer-return v) (cons v '()))
 
 (define (Writer-log msg . args)
