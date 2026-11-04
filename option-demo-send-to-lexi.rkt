@@ -17,12 +17,16 @@
 (define-syntax-rule (Option-return* exprs ...)
   (reset (let () exprs ...)))
  
-(define-syntax-rule (Option-bind! expr)
+#;(define-syntax-rule (Option-bind! expr)
   (shift k
          (with-handlers
              ((exn? (λ (e) (Error (exn-message e)))))
            (Option-bind expr k))))
 
+(define (wrap-exception thunk error-cb)
+  (with-handlers
+      ((exn? (λ (e) (error-cb (exn-message e)))))
+    (thunk)))
 
 ;; testing...................
 (module+ main
@@ -31,12 +35,21 @@
 
       (define a 3400)
    
-      (for/fold ((acc #f)) ((divisor (in-range 1 5 1)))
-        (printf "divisor = ~a: " divisor)
+      (for/fold ((acc #f))
+                ((divisor (in-range 1 5 1)))
      
-        (let ((result (Option-bind! (quotient-option a divisor))))
-          (printf "result = ~a~%" result)
-          result))))
+        (shift k
+               (wrap-exception
+                (thunk (Option-bind (quotient-option a divisor) k))
+                (λ (msg) (Error msg)))))))
+  
+#|       (for/fold ((acc #f))
+                   ((divisor (in-range 1 5 1)))
+           (printf "divisor = ~a: " divisor)
+        
+           (let ((result (Option-bind! (quotient-option a divisor))))
+             (printf "result = ~a~%" result)
+          result)))) |#
 
   
   (printf "~%Return from Option: results = ~a~%" results1))
