@@ -2,21 +2,23 @@
 (require racket/control)
 (require "monad-run.rkt")
 
+(struct Write-data (value log) #:prefab)
+
 (define (ensure-list v) (if (list? v) v (list v)))
 
 (define (append-log next-log prev-log)
   (append (ensure-list next-log) (ensure-list prev-log)))
   
-(define (Writer-bind prev func)
-  (let* ((pval (car prev))
-         (plog (cdr prev))
-         (next (func pval))
-         (nval (car next))
-         (nlog (cdr next)))
-    (cons nval (append-log nlog plog))))
+(define (Writer-bind m f)
+  (let* ((mval (Write-data-value m))
+         (mlog (Write-data-log m))
+         (nextm (f mval))
+         (nmval (Write-data-value nextm))
+         (nmlog (Write-data-log nextm)))
+    (Write-data nmval (append-log nmlog mlog))))
 
 
-(define (Writer-return v) (cons v '()))
+(define (Writer-return v) (Write-data v '()))
 
 (define (Writer-log msg . args)
   (cons #f (apply format msg args)))

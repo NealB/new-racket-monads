@@ -1,30 +1,59 @@
 #lang racket
 (require racket/control)
-(require "monad-run.rkt")
-(require "writer.rkt")
 
-(define (add5 x)
-  (cons (+ 5 x) (format "Add 5 to ~a" x)))
+(define-syntax-rule (show-and-do op arg1 arg2)
+  (let ()
+    (printf "~s ~s ~s~%" op arg1 arg2)
+    (op arg1 arg2)))
+
+(struct Write-data (value log)
+  #:transparent
+  #:methods gen:custom-write
+  [(define (write-proc data port mode)
+     (fprintf port "value=~s; log=~s" (Write-data-value data) (Write-data-log data)))])
 
 
-(define bind! (make-effect! Writer-bind))
+(define (make-write-data value log)
+  (Write-data value log))
 
-(define-syntax-rule (run-reset body0 body1 ...)
-  (reset (thunk body0 body1 ...)))
+(define (ensure-list v) (if (list? v) v (list v)))
 
-(define results
-  (run-reset
+  
+(define (Writer-bind m f)
+  (let* ((mval (Write-data-value m))
+         (nextm (f mval))
+         (nmval (Write-data-value nextm))
+         (mlog (Write-data-log m))
+         (nmlog (Write-data-log nextm)))
+    (Write-data nmval (cons mlog nmlog))))
+
+(define (Writer-return v) (Write-data v '()))
+
+(define (add5 x i)
+  (Write-data (+ 5 x) (format "Add 5 to ~a (i=~a)" x i)))
+
+(define-syntax-rule (Writer-return* exprs ...)
+  (reset (let () exprs ...)))
+
+;; testing...................
+(module+ main
+  
+  (define results
+    (Writer-return*
      
-   (define a 34)
-   (define b (bind! (add5 a)))
-   (define c (bind! (add5 b)))
-   (define d (bind! (add5 19)))
-   (define e (bind! (add5 2)))
-
-   (bind! (Writer-log "final log message"))
-
-   (Writer-return e)))
+     (define init 0)
 
 
-(display (~a "results:\n" (Writer-format results) (~a "done\n")))
-(newline)
+     (let* ((a (shift k (Writer-bind (add5 init 0) k)))
+            (a (shift k (Writer-bind (add5 a 1) k)))
+            (a (shift k (Writer-bind (add5 a 2) k)))
+            (a (shift k (Writer-bind (add5 a 3) k))))
+
+       (Writer-return a))))
+
+
+  (display "results:\n")
+  (pretty-print results)
+  (display "done\n")
+  (newline))
+  
