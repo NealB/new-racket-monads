@@ -46,8 +46,7 @@
 ;; testing...................
 (module+ main
   (define results1
-    (Option-return*
-     ((a 8000))
+    (Option-return* ((a 8000))
 
       (define fvalue
         (for/fold ((acc #f))
