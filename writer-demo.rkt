@@ -1,10 +1,6 @@
 #lang racket
 (require racket/control)
-
-(define-syntax-rule (show-and-do op arg1 arg2)
-  (let ()
-    (printf "~s ~s ~s~%" op arg1 arg2)
-    (op arg1 arg2)))
+(require "../racket-utilities/utilities-dev.rkt")
 
 (struct Write-data (value log)
   #:transparent
@@ -16,24 +12,37 @@
 (define (make-write-data value log)
   (Write-data value log))
 
-(define (ensure-list v) (if (list? v) v (list v)))
 
-  
 (define (Writer-bind m f)
-  (let* ((mval (Write-data-value m))
-         (nextm (f mval))
-         (nmval (Write-data-value nextm))
-         (mlog (Write-data-log m))
-         (nmlog (Write-data-log nextm)))
-    (Write-data nmval (cons mlog nmlog))))
+  (~> m
+      (match-λ ((Write-data mval mlog)
+                (Write-data (f mval) mlog)))
+      (match-λ ((Write-data (Write-data mval mlog2) mlog1)
+                (Write-data mval (cons mlog1 mlog2))))
+      !))
+
+
 
 (define (Writer-return v) (Write-data v '()))
 
-(define (add5 x i)
-  (Write-data (+ 5 x) (format "Add 5 to ~a (i=~a)" x i)))
-
 (define-syntax-rule (Writer-return* exprs ...)
   (reset (let () exprs ...)))
+
+(define (with-output-capture thunk)
+  (let* ((os (open-output-string))
+         (value (parameterize ((current-output-port os)) (thunk)))
+         (str (get-output-string os))) 
+    (Write-data value str)))
+
+
+(define (add5 x i)
+  (printf "Add 5 to ~a (i=~a)." x i)
+  (define newx (+ 5 x))
+  (printf " New=~a." newx)
+  newx)
+
+(define-namespace-anchor nsa)
+(define ns (namespace-anchor->namespace nsa))
 
 ;; testing...................
 (module+ main
@@ -44,10 +53,10 @@
      (define init 0)
 
 
-     (let* ((a (shift k (Writer-bind (add5 init 0) k)))
-            (a (shift k (Writer-bind (add5 a 1) k)))
-            (a (shift k (Writer-bind (add5 a 2) k)))
-            (a (shift k (Writer-bind (add5 a 3) k))))
+     (let* ((a (shift k (Writer-bind (with-output-capture (thapply add5 init 0)) k)))
+            (a (shift k (Writer-bind (with-output-capture (thapply add5 a 1)) k)))
+            (a (shift k (Writer-bind (with-output-capture (thapply add5 a 2)) k)))
+            (a (shift k (Writer-bind (with-output-capture (thapply add5 a 3)) k))))
 
        (Writer-return a))))
 
@@ -55,5 +64,7 @@
   (display "results:\n")
   (pretty-print results)
   (display "done\n")
-  (newline))
+
+  (eval `(define results ,results) ns))
+
   

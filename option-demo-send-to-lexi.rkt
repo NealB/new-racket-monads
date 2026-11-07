@@ -1,57 +1,64 @@
 #lang racket
 (require racket/control)
+(require "../racket-utilities/utilities-dev.rkt")
 
-(define (Some x) (list 'Some x))
-(define (Error e) (list 'Error e))
-  
+(struct Some (x)
+  #:transparent
+  #:methods gen:custom-write
+  [(define (write-proc data port mode)
+     (fprintf port "Some ~a" (Some-x data)))])
+
+(struct Error (msg)
+  #:transparent
+  #:methods gen:custom-write
+  [(define (write-proc data port mode)
+     (fprintf port "Error: ~s" (Error-msg data)))])
+
 (define (quotient-option x y)
   (Some (quotient x y)))
 
+(define (Option-return v) (Some v))
 
-(define (Option-bind prev cont)
-  (match prev
-    ((list 'Error (? string?)) prev)
-    ((list 'Some (? number? x)) (cont x))
-    (_ (raise (format "Option-bind-- bad argument: ~s" prev)))))
-  
-(define-syntax-rule (Option-return* exprs ...)
-  (reset (let () exprs ...)))
- 
-#;(define-syntax-rule (Option-bind! expr)
-  (shift k
-         (with-handlers
-             ((exn? (λ (e) (Error (exn-message e)))))
-           (Option-bind expr k))))
 
-(define (wrap-exception thunk error-cb)
+(define (Option-bind m f)
+  (~> m
+      (match-λ ((Some x) (Some (f x)))
+               ((Error msg) (Error msg)))
+         
+      (match-λ ((Some (Some x)) (Some x))
+               ((Some (Error msg)) (Error msg))
+               ((var x) x))
+      !))
+
+(define-syntax-rule (Option-return* ((vname vexpr) ...) exprs ...)
+  (reset (let ((vname vexpr) ...) exprs ...)))
+
+
+(define (wrap-exception thunk)
   (with-handlers
-      ((exn? (λ (e) (error-cb (exn-message e)))))
+      ((exn? (λ (e) (Error (exn-message e)))))
     (thunk)))
+
+
+(define-namespace-anchor nsa)
+(define ns (namespace-anchor->namespace nsa))
 
 ;; testing...................
 (module+ main
   (define results1
     (Option-return*
+     ((a 8000))
 
-      (define a 3400)
-   
-      (for/fold ((acc #f))
-                ((divisor (in-range 1 5 1)))
+      (define fvalue
+        (for/fold ((acc #f))
+                  ((divisor (in-list '(1 5 1 7 3))))
      
-        (shift k
-               (wrap-exception
-                (thunk (Option-bind (quotient-option a divisor) k))
-                (λ (msg) (Error msg)))))))
-  
-#|       (for/fold ((acc #f))
-                   ((divisor (in-range 1 5 1)))
-           (printf "divisor = ~a: " divisor)
-        
-           (let ((result (Option-bind! (quotient-option a divisor))))
-             (printf "result = ~a~%" result)
-          result)))) |#
+          (shift k (Option-bind (wrap-exception (thapply quotient-option a divisor)) k))))
 
+      (Option-return fvalue)))
   
-  (printf "~%Return from Option: results = ~a~%" results1))
+  
+  (printf "~%Return from Option: results = ~a~%" results1)
 
+  (eval `(define results ,results1) ns))
 
